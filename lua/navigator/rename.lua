@@ -43,19 +43,31 @@ local function ts_symbol()
   end
 
   local bufnr = api.nvim_get_current_buf()
+  local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
+  if not ok or not parser then
+    return
+  end
 
-  local ft_to_lang = require('guihua.ts_obsolete.parsers').ft_to_lang
-  local lang = ft_to_lang(vim.bo[bufnr].filetype)
-  local query = vim.treesitter.query.get(lang, 'highlights') or vim.treesitter.get_query(lang, 'highlights')
+  local cursor = api.nvim_win_get_cursor(0)
+  local row, col = cursor[1] - 1, cursor[2]
 
-  local ts_utils = require('guihua.ts_obsolete.ts_utils')
-  local ts_utils = require('')
-  local current_node = ts_utils.get_node_at_cursor()
+  local tree = parser:parse()[1]
+  if not tree then
+    return
+  end
+
+  local current_node = tree:root():named_descendant_for_range(row, col, row, col)
   if not current_node then
     return
   end
-  local start_row, _, end_row, _ = current_node:range()
-  for id, _, _ in query:iter_captures(current_node, 0, start_row, end_row) do
+
+  local lang = parser:lang()
+  local query = vim.treesitter.query.get(lang, 'highlights')
+  if not query then
+    return current_node
+  end
+
+  for id, _, _ in query:iter_captures(current_node, bufnr) do
     local name = query.captures[id]
     if name:find('builtin') or name:find('keyword') then
       return
