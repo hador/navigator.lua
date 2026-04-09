@@ -228,7 +228,7 @@ end
 
 local function ts_definition(uri, range, optional)
   local unload_bufnr
-  local ts_enabled, _ = pcall(require, 'guihua.ts_obsolete.locals')
+  local ts_enabled, _ = pcall(require, 'navigator.ts_compat')
   if not ts_enabled or not TS_analysis_enabled then
     lerr('ts not enabled')
     return nil

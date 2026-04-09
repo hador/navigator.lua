@@ -4,23 +4,14 @@ local log = require('navigator.util').log
 local trace = require('navigator.util').trace
 local api = vim.api
 
-local has_ts_main = pcall(require, 'nvim-treesitter.config')
 local ok, parsers = pcall(require, 'nvim-treesitter.parsers')
-local tsutils, query
-
 if not ok then
-  error('treesitter master version not installed')
-  return nil
+  parsers = { has_parser = function() return vim.treesitter.get_parser() ~= nil end }
 end
-if has_ts_main then
-  parsers = require('guihua.ts_obsolete.parsers')
 
-  tsutils = require('guihua.ts_obsolete.ts_utils')
-  query = require('guihua.ts_obsolete.query')
-else
-  tsutils = require('nvim-treesitter.ts_utils')
-  query = require('nvim-treesitter.query')
-end
+local ts_compat = require('navigator.ts_compat')
+local tsutils = ts_compat
+local query = ts_compat.query
 
 local get_node_at_line = require('navigator.treesitter').get_node_at_line
 local M = {}
